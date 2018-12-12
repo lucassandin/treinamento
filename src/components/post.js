@@ -1,134 +1,167 @@
-import React, {Component} from  'react';
-import {Button,
-    Card,
-    CardContent,
-    Typography,
-    CardActions,
-    IconButton,
-    Grid
-} from '@material-ui/core';
-import ThumbUp from '@material-ui/icons/ThumbUp';
-import DeleteIcon from '@material-ui/icons/Delete';
-import Input from '@material-ui/core/Input';
-import Comment from './comment';
-import './post.css';
-import axios from 'axios';
-import moment from 'moment';
+import React, { Component } from "react";
+import {
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  CardActions,
+  IconButton,
+  CardHeader,
+  TextField
+} from "@material-ui/core";
+import ThumbUp from "@material-ui/icons/ThumbUp";
+import DeleteIcon from "@material-ui/icons/Delete";
+import Comment from "./comment";
+import axios from "axios";
+import moment from "moment";
+import { withStyles } from "@material-ui/core/styles";
 
-class Post extends Component{
-    constructor(props){
-        super(props);
-        this.state={
-            likes: props.actualLikes,
-            newComment: '',
-            comments: []
-        }
-    }
+const styles = theme => ({
+  card: {
+    padding: "20px",
+    marginLeft: "auto",
+    marginRight: "auto",
+    marginTop: "10px"
+  },
+  cardFloatRight: {
+    float: "right"
+  },
+  textField: {
+    width: "100%",
+    marginBottom: "5px"
+  },
+  button: {
+    backgroundColor: "#2d83bd",
+    color: "#fff"
+  },
+  iconButtonDelete: {
+    float: "right"
+  }
+});
 
-    onChange(event, key){
-        const value = event.target.value;
-        this.setState({[key]: value})
-    }
+class Post extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      likes: props.actualLikes,
+      newComment: "",
+      comments: []
+    };
+  }
 
-    componentDidMount(){
-        this.readFromStorage();
-    }
+  onChange(event, key) {
+    const value = event.target.value;
+    this.setState({ [key]: value });
+  }
 
-    onSubmitComment(){
-        const newComment = this.state.newComment;
-        const comments = this.state.comments;
+  componentDidMount() {
+    this.readFromStorage();
+  }
 
-        comments.push({text: newComment, post: this.props.time});
-        this.saveInStorage();
-        this.setState({
-            comments,
-            newComment: ''
-        })
-    }
+  onSubmitComment() {
+    const newComment = this.state.newComment;
+    const comments = this.state.comments;
 
-    saveInStorage(){
-        const commentArray = this.state.comments;
-        localStorage.setItem('comment_' + this.props.time, JSON.stringify(commentArray));
-    }
+    comments.push({ text: newComment, post: this.props.time });
+    this.saveInStorage();
+    this.setState({
+      comments,
+      newComment: ""
+    });
+  }
 
-    readFromStorage(){
-        let commentsSaved = localStorage.getItem('comment_' + this.props.time);
-        commentsSaved = JSON.parse(commentsSaved);
+  saveInStorage() {
+    const commentArray = this.state.comments;
+    localStorage.setItem(
+      "comment_" + this.props.time,
+      JSON.stringify(commentArray)
+    );
+  }
 
-        this.setState({comments: commentsSaved  || []});
-    }
+  readFromStorage() {
+    let commentsSaved = localStorage.getItem("comment_" + this.props.time);
+    commentsSaved = JSON.parse(commentsSaved);
 
-    onLike(){
-        const likeCount = this.state.likes;
-        const newPost = {
-            likes: likeCount + 1,
-            title: this.props.title,
-            text: this.props.children,
-            time: this.props.time
-        };
-        axios.put('http://localhost:3000/posts/' + this.props.id, newPost).then(()=> {
-            this.setState({likes: likeCount + 1});
-        })
-    }
+    this.setState({ comments: commentsSaved || [] });
+  }
 
-    deletePost(){
-        axios.delete('http://localhost:3000/posts/' + this.props.id).then(()=> {
-            this.props.onDelete(this.props.id);
-        })
-    }
+  onLike() {
+    const likeCount = this.state.likes;
+    const newPost = {
+      likes: likeCount + 1,
+      title: this.props.title,
+      text: this.props.children,
+      time: this.props.time
+    };
+    axios
+      .put("http://localhost:3000/posts/" + this.props.id, newPost)
+      .then(() => {
+        this.setState({ likes: likeCount + 1 });
+      });
+  }
 
-    render(){
-        return(
-            <Card className='post'>
-                <CardContent>
-                    <Typography variant="h5" component="h2"
-                    onClick={()=>this.props.navigate('/post/' + this.props.id)}
-                    >
-                    {this.props.title}
-                    </Typography>
+  deletePost() {
+    axios.delete("http://localhost:3000/posts/" + this.props.id).then(() => {
+      this.props.onDelete(this.props.id);
+    });
+  }
 
-                <small>{moment(this.props.time).fromNow()}</small>
-                <Typography variant="h5" component="h3" color="textSecondary">
-                    {this.props.children}
-                </Typography>
-                    <p>{this.state.likes}</p>
-                    <IconButton onClick={()=>this.onLike()} color="primary"  component="span">
-                        <ThumbUp />
-                    </IconButton>
+  render() {
+    const { classes } = this.props;
+    return (
+      <Card className={classes.card}>
+        <IconButton
+          className={classes.iconButtonDelete}
+          aria-label="Delete"
+          onClick={this.deletePost.bind(this)}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+        <CardHeader
+          title={this.props.title}
+          subheader={moment(this.props.time).fromNow()}
+          onClick={() => this.props.navigate("/post/" + this.props.id)}
+        />
 
-                {this.state.comments.map(comment => {
-                    return <Comment text={comment.text}/>
-                })}
-                <br/>
-                    <Grid container spacing={24}>
-                        <Grid item xs={8}>
-                            <Input
-                                fullWidth
-                                value={this.state.newComment}
-                                onChange={(event)=>this.onChange(event,'newComment')}
-                                placeholder={'Novo comentário'}/>
-                        </Grid>
-                            <Grid item xs={4}>
-                                <CardActions>
-                                    <Button style={{backgroundColor: '#4d9048'}} onClick={()=>this.onSubmitComment()} variant="contained" color="primary">
-                                        Postar comentário
-                                    </Button>
-                                    <IconButton aria-label="Delete" onClick={this.deletePost.bind(this)}>
-                                        <DeleteIcon fontSize="large" />
-                                    </IconButton>
-                                </CardActions>
-                        </Grid>
-                    </Grid>
-                </CardContent>
-            </Card>
-        );
-    }
+        <CardContent>
+          <Typography component="p">{this.props.children}</Typography>
+          <Typography dir="rtl">
+            {this.state.likes}
+            <IconButton
+              onClick={() => this.onLike()}
+              color="primary"
+              component="span"
+            >
+              <ThumbUp />
+            </IconButton>
+          </Typography>
+        </CardContent>
+
+        <CardContent>
+          {this.state.comments.map(comment => {
+            return <Comment text={comment.text} />;
+          })}
+        </CardContent>
+
+        <CardContent>
+          <TextField
+            className={classes.textField}
+            value={this.state.newComment}
+            onChange={event => this.onChange(event, "newComment")}
+            placeholder={"Comente algo!"}
+          />
+          <CardActions className={classes.cardFloatRight}>
+            <Button
+              className={classes.button}
+              onClick={() => this.onSubmitComment()}
+            >
+              Comentar
+            </Button>
+          </CardActions>
+        </CardContent>
+      </Card>
+    );
+  }
 }
 
-const componetStyles={
-    title: {
-        color: 'red'
-    }
-}
-
-export default Post;
+export default withStyles(styles)(Post);

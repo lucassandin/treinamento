@@ -1,10 +1,10 @@
 {
   "posts": [
     {
-      "likes": 3,
-      "title": "Novo post",
-      "text": "asdasdasd",
-      "time": 1544468782495,
+      "likes": 1,
+      "title": "Primeiro post",
+      "text": "Olá forasteiro!",
+      "time": 1544584504026,
       "id": 1
     }
   ]
